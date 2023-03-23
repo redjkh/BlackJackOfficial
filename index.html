@@ -10,7 +10,7 @@
             text-align: center;
         }
 
-        .button {
+        button {
             background-color: rgb(251, 200, 200);
             border: rgb(245, 84, 116);
             border-radius: 5px;
@@ -22,11 +22,22 @@
             font-size: 16px;
         }
 
-        .button:active {
-            background-color: rgb(245, 143, 143);
+        button:active {
+            background-color: rgb(243, 167, 167);
             border: rgb(245, 84, 116);
             border-radius: 5px;
             color: rgb(0, 0, 0);
+            padding: 5px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+        }
+
+        button:hover {
+            border: rgb(245, 84, 116);
+            border-radius: 5px;
+            color: rgb(186, 53, 79);
             padding: 5px;
             text-align: center;
             text-decoration: none;
@@ -39,8 +50,19 @@
             height: 25%;
         }
 
-        #busted {
-            color: brown;
+        #resultDisplay {
+            color: rgb(251, 200, 200);
+            text-align: center;
+        }
+
+        h1 {
+            color: rgb(251, 200, 200);
+            text-align: center;
+        }
+
+        p {
+            color: rgb(251, 200, 200);
+            text-align: center;
         }
 
     </style>
@@ -49,25 +71,38 @@
 <body style="background-color:rgb(0, 0, 0);" onload="main()">
     <script>
 
-        // for the buttons
-        let stuck = false;
-        let drawn = false;
+        // all initial variables
+        let bust = false;
+        let total = 0;
+        const cardSuits = ["Hearts", "Spades", "Diamonds", "Clubs"];
+        const cardValues = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"];
+        let alreadydrawncards = []
+        // make computer more likely to roll higher
+        const weightedcomp = [10, 11, 12, 13, 13, 14, 14, 15, 15, 16, 16, 16, 17, 17, 17, 18, 18, 18, 19, 19, 19, 19, 20, 20, 20, 20]
+        // the computer isnt going to pull cards
+        const comp = weightedcomp[random(0, weightedcomp.length)];
 
-
-        let gameState = "inital";
-        function stick() {
+        function stick() 
+        {
             console.log("stick!");
-            stuck = true;
+            results()
             return;
         }
-        function draw() {
+
+        function draw() 
+        {
             console.log("draw!");
             const drawnCard = drawCard();
+            total += cardvalue(drawnCard[0], total);
             console.log("drawn:", drawnCard);
             const cardImgPath = cardpng(drawnCard[0], drawnCard[1]);
             console.log("path", cardImgPath);
             addImgToDisplay(cardImgPath);
-            drawn = true;
+            if (total > 21)
+            {
+                bust = true;
+                results()
+            }
             return;
         }
 
@@ -76,11 +111,31 @@
         }
 
 
-        function addImgToDisplay(imgPath) {
+        function addImgToDisplay(imgPath) 
+        {
             const cardDisplayDiv = document.querySelector("#cardDisplay");
             console.log("cardDisplay", cardDisplayDiv);
             cardDisplayDiv.innerHTML = cardDisplayDiv.innerHTML 
-            + '<img class="resize" src="images/' + imgPath + '" alt="10 of spades">';
+            + '<img class="resize" src="images/' + imgPath + '" alt="card">';
+        }
+
+        function results()
+        {
+            const resultDisplayDiv = document.querySelector("#resultDisplay");
+            if (bust == true) {
+                resultDisplayDiv.innerHTML = "<h2>you busted, your total was: " + total + " computer got: " + comp + "</h2> ";
+            }
+            else {
+                if (total > comp) {
+                    resultDisplayDiv.innerHTML = "<h2>you win! your total was: " + total + " computer got: " + comp + "</h2> ";
+                }
+                else if (total < comp) {
+                    resultDisplayDiv.innerHTML = "<h2>you lose. your total was: " + total + " computer got: " + comp + "</h2> ";
+                }
+                else {
+                    resultDisplayDiv.innerHTML = "<h2>you and computer drew with a score of: " + total + "</h2>";
+                }
+            }
         }
 
         function cardpng(x, y) {
@@ -110,100 +165,60 @@
             return card;
         }
 
-        function drawCard() {
-            // TODO: be less lucky
-            return ["Ace", "Spades"];
+        function drawCard() 
+        {
+            console.log(alreadydrawncards);
+            let card = [cardValues[random(0, cardValues.length)], cardSuits[random(0, cardSuits.length)]];
+            if (alreadydrawncards.includes(cardpng(card[0], card[1])))
+            {
+                drawCard();
+            }
+            else
+            {
+                alreadydrawncards.push(cardpng(card[0], card[1]));
+                return card;
+            }
         }
 
         function main() {
-            let bust = false;
-            let total = 0;
-            const cardSuits = ["Hearts", "Spades", "Diamonds", "Clubs"];
-            const cardValues = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"];
-            // make computer more likely to roll higher
-            const weightedcomp = [10, 11, 12, 13, 13, 14, 14, 15, 15, 16, 16, 16, 17, 17, 17, 18, 18, 18, 19, 19, 19, 19, 20, 20, 20, 20]
-
-            // the computer isnt going to pull cards
-            const comp = weightedcomp[random(0, weightedcomp.length)];
-
             console.log("This is blackjack google the rules (ace rule included).");
             console.log("to start press 'ok'.");
             // begin 
             // first card 
-            let a = cardSuits[random(0, cardSuits.length)];
-            let b = cardValues[random(0, cardValues.length)];
+            let first = drawCard();
 
             // second card 
-            let c = cardSuits[random(0, cardSuits.length)];
-            let d = cardValues[random(0, cardValues.length)];
+            let second = drawCard();
 
             console.log("you drew:");
-            console.log(b, "of", a);
-            console.log(d, "of", c);
+            console.log(first[0], "of", first[1]);
+            console.log(second[0], "of", second[1]);
 
-            // assigning card values 
-            b = cardvalue(b, total);
-            d = cardvalue(d, total);
+            cardimg1 = cardpng(first[0], first[1]);
+            cardimg2 = cardpng(second[0], second[1]);
+            addImgToDisplay(cardimg1);
+            addImgToDisplay(cardimg2);
 
-            // total after drawing 2 cards 
-            total = b + d;
 
-            // whether to draw next card or not 
-            /*while (bust == false)
-            {
-                while (true)
-                {
-                    if (draw)
-                    {
-                        let drawncard = y[random(0, y.length)];
-                        let drawncardx = x[random(0, x.length)];
-                        console.log("you drew ", drawncard, "of", drawncardx);
-                        drawncard = cardvalue(drawncard, total);
-                        total += drawncard;
-                        if (total > 21)
-                        {
-                            bust = true;
-                            continue;
-                        }
-                    }
-                    else if (stick)
-                    {
-                        break;
-                    }
-                }
-            }*/
-
-            // game results 
-            if (bust == true) {
-                console.log("you busted, your total was: ", total, "computer got:", comp);
-            }
-            else {
-                if (total > comp) {
-                    console.log("you win! your total was: ", total, "computer got: ", comp);
-                }
-                else if (total < comp) {
-                    console.log("you lose. your total was: ", total, "computer got: ", comp);
-                }
-                else {
-                    console.log("you and computer drew with a score of: ", total);
-                }
-            }
-
+            // assigning card values + total after drawing 2 cards
+            let b = cardvalue(first[0], total);
+            total += b
+            let d = cardvalue(second[0], total);
+            total += d
         }
 
     </script>
-    <h1 style="color:rgb(251, 200, 200); text-align: center;">Black Jack</h1>
-    <p style="color:rgb(251, 200, 200); text-align: center;">google the rules</p>
+    <h1>Black Jack</h1>
+    <p>google the rules</p>
     <div id="cardDisplay" class="myDiv">
-        <img class="resize" src="images/king_of_hearts.png" alt="king of hearts">
-        <img class="resize" src="images/10_of_spades.png" alt="10 of spades">
+        
     </div>
     <div class="myDiv">
-        <button class="button" onclick="draw()">draw</button>
-        <button class="button" onclick="stick()">stick</button>
+        <button onclick="draw()">draw</button>
+        <button onclick="stick()">stick</button>
     </div>
-    <div id="busted">
-        Busted!
+    <div id="resultDisplay">
+        
     </div>
 </body>
 
